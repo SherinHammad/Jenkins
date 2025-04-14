@@ -27,31 +27,29 @@ pipeline {
         sleep time: 120, unit: 'SECONDS'
       }
     }
+
     stage('Extract & Write Private Key') {
       steps {
         script {
-         def privateKey = sh(script: "terraform output -raw private_key_pem", returnStdout: true).trim()
-         writeFile file: 'my-key.pem', text: privateKey
-         sh 'chmod 600 my-key.pem'
-            }
-         }
-   }
+          def privateKey = sh(script: "terraform output -raw private_key_pem", returnStdout: true).trim()
+          writeFile file: "${env.WORKSPACE}/my-key.pem", text: privateKey
+          sh "chmod 600 ${env.WORKSPACE}/my-key.pem"
+        }
+      }
+    }
 
-    stage('Get EC2 Public IP') {
+    stage('Get EC2 Public IP & Create Inventory') {
       steps {
         script {
           def ip = sh(script: "terraform output -raw public_ip", returnStdout: true).trim()
-          writeFile file: 'inventory.ini', text: "[ec2]\n${ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/my-key.pem"
+          writeFile file: "${env.WORKSPACE}/inventory.ini", text: "[ec2]\n${ip} ansible_user=ubuntu ansible_ssh_private_key_file=${env.WORKSPACE}/my-key.pem"
         }
       }
     }
 
     stage('Run Ansible Playbook') {
       steps {
-        
         sh 'ansible-playbook -i inventory.ini playbook.yaml'
-
-
       }
     }
   }
