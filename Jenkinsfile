@@ -39,7 +39,8 @@ pipeline {
 
     stage('Run Ansible Playbook') {
       steps {
-        sh 'ansible-playbook -i inventory.ini playbook.yml'
+        sh 'ssh -o StrictHostKeyChecking=no localhost "ansible-playbook -i $WORKSPACE/inventory.ini $WORKSPACE/playbook.yml"'
+
       }
     }
   }
