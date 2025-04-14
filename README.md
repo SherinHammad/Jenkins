@@ -27,6 +27,8 @@ The pipeline requires the following AWS credentials to be stored in Jenkins:
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
 - AWS_SESSION_TOKEN
+  
+![credentials](credentials.png)
 
 **Notes**
 - The EC2 instance must be associated with a security group that allows SSH access on port 22.
