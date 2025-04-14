@@ -53,8 +53,9 @@ pipeline {
 
     stage('Run Ansible Playbook') {
       steps {
-        sh "ansible-playbook -i ${env.INVENTORY_PATH} playbook.yaml"
-      }
+        withEnv(["ANSIBLE_HOST_KEY_CHECKING=False"]) {
+      sh "ansible-playbook -i /tmp/inventory.ini playbook.yaml"
+    }
     }
   }
 }
