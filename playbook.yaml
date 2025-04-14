@@ -1,0 +1,14 @@
+- name: Configure EC2 with script
+  hosts: ec2
+  become: true
+  tasks:
+    - name: Copy script to EC2
+      copy:
+        src: hello.sh
+        dest: /home/ubuntu/hello.sh
+        mode: '0755'
+
+    - name: Execute script
+      shell: ./hello.sh
+      args:
+        chdir: /home/ubuntu

@@ -1,0 +1,18 @@
+What You’ll Need
+✅ Jenkins machine should have:
+
+terraform installed
+
+ansible installed
+
+AWS CLI configured (credentials & region)
+
+SSH private key (used by Ansible) in a known path (e.g. ~/.ssh/ec2-key.pem)
+
+✅ Your project folder should contain:
+
+main.tf (Terraform config for EC2)
+
+inventory.ini (Ansible inventory file that gets updated with the new EC2 IP)
+
+playbook.yml (Ansible playbook to run your script)

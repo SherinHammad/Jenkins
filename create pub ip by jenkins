@@ -1,0 +1,8 @@
+stage('Get EC2 Public IP') {
+            steps {
+                script {
+                    def ip = sh(script: "terraform output -raw public_ip", returnStdout: true).trim()
+                    writeFile file: 'inventory.ini', text: "[ec2]\n${ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/ec2-key.pem"
+                }
+            }
+        }
