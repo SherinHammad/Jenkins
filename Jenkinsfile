@@ -1,33 +1,27 @@
 pipeline {
-    agent any
-
-    environment {
-        TF_VAR_aws_access_key = credentials('aws-access-key')  // Jenkins credentials
-        TF_VAR_aws_secret_key = credentials('aws-secret-key')
+ agent any
+    
+ stages {
+    stage('Run Terraform') {
+      steps {
+        withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+          sh '''
+            export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+            terraform init
+            terraform apply -auto-approve
+          '''
+        }
+      }
     }
-
-    stages {
-
-        stage('Terraform Init') {
-            steps {
-                sh 'terraform init'
-            }
-        }
-
-        stage('Terraform Apply') {
-            steps {
-                sh 'terraform apply -auto-approve'          //  Skip the interactive "yes/no" prompt
-            }
-        }
-
-        stage('Wait for EC2 Readiness') {
+    stage('Wait for EC2 Readiness') {
             steps {
                 echo 'Waiting 60 seconds for EC2 instance to boot...'
                 sleep time: 120, unit: 'SECONDS'
             }
         }
 
-        stage('Get EC2 Public IP') {
+    stage('Get EC2 Public IP') {
             steps {
                 script {
                     def ip = sh(script: "terraform output -raw public_ip", returnStdout: true).trim()
@@ -36,7 +30,7 @@ pipeline {
             }
         }
 
-        stage('Run Ansible Playbook') {
+    stage('Run Ansible Playbook') {
             steps {
                 sh 'ansible-playbook -i inventory.ini playbook.yml'
             }
