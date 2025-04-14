@@ -4,7 +4,7 @@ pipeline {
   stages {
     stage('Terraform Init & Apply') {
       steps {
-        withCredentials([
+        withCredentials([ 
           string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
           string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY'),
           string(credentialsId: 'AWS_SESSION_TOKEN', variable: 'AWS_SESSION_TOKEN')
@@ -35,7 +35,6 @@ pipeline {
           def keyPath = "/tmp/my-key.pem"
           writeFile file: keyPath, text: privateKey
           sh "chmod 600 ${keyPath}"
-          env.KEY_PATH = keyPath
         }
       }
     }
@@ -45,17 +44,17 @@ pipeline {
         script {
           def ip = sh(script: "terraform output -raw public_ip", returnStdout: true).trim()
           def inventoryPath = "/tmp/inventory.ini"
-          writeFile file: inventoryPath, text: "[ec2]\n${ip} ansible_user=ubuntu ansible_ssh_private_key_file=${env.KEY_PATH}"
-          env.INVENTORY_PATH = inventoryPath
+          writeFile file: inventoryPath, text: "[ec2]\n${ip} ansible_user=ubuntu ansible_ssh_private_key_file=${keyPath}"
         }
       }
     }
 
-stage('Run Ansible Playbook') {
-  steps {
-    withEnv(["ANSIBLE_HOST_KEY_CHECKING=False"]) {
-      sh "ansible-playbook -i /tmp/inventory.ini playbook.yaml"
-            }
+    stage('Run Ansible Playbook') {
+      steps {
+        withEnv(["ANSIBLE_HOST_KEY_CHECKING=False"]) {
+          sh "ansible-playbook -i /tmp/inventory.ini playbook.yaml"
         }
-     }
+      }
+    }
+  }
 }
