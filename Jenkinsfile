@@ -4,7 +4,7 @@ pipeline {
   stages {
     stage('Terraform Init & Apply') {
       steps {
-        withCredentials([ 
+        withCredentials([
           string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
           string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY'),
           string(credentialsId: 'AWS_SESSION_TOKEN', variable: 'AWS_SESSION_TOKEN')
@@ -23,8 +23,8 @@ pipeline {
 
     stage('Wait for EC2 Readiness') {
       steps {
-        echo 'Waiting 120 seconds for EC2 instance to boot...'
-        sleep time: 120, unit: 'SECONDS'
+        echo 'Waiting 60 seconds for EC2 instance to boot...'
+        sleep time: 60, unit: 'SECONDS'
       }
     }
 
@@ -35,6 +35,7 @@ pipeline {
           def keyPath = "/tmp/my-key.pem"
           writeFile file: keyPath, text: privateKey
           sh "chmod 600 ${keyPath}"
+          env.KEY_PATH = keyPath
         }
       }
     }
@@ -44,16 +45,15 @@ pipeline {
         script {
           def ip = sh(script: "terraform output -raw public_ip", returnStdout: true).trim()
           def inventoryPath = "/tmp/inventory.ini"
-          writeFile file: inventoryPath, text: "[ec2]\n${ip} ansible_user=ubuntu ansible_ssh_private_key_file=${keyPath}"
+          writeFile file: inventoryPath, text: "[ec2]\n${ip} ansible_user=ubuntu ansible_ssh_private_key_file=${env.KEY_PATH}"
+          env.INVENTORY_PATH = inventoryPath
         }
       }
     }
 
     stage('Run Ansible Playbook') {
       steps {
-        withEnv(["ANSIBLE_HOST_KEY_CHECKING=False"]) {
-          sh "ansible-playbook -i /tmp/inventory.ini playbook.yaml"
-        }
+        sh "ansible-playbook -i ${env.INVENTORY_PATH} playbook.yaml"
       }
     }
   }
