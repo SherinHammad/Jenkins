@@ -51,11 +51,11 @@ pipeline {
       }
     }
 
-    stage('Run Ansible Playbook') {
-      steps {
-        withEnv(["ANSIBLE_HOST_KEY_CHECKING=False"]) {
+stage('Run Ansible Playbook') {
+  steps {
+    withEnv(["ANSIBLE_HOST_KEY_CHECKING=False"]) {
       sh "ansible-playbook -i /tmp/inventory.ini playbook.yaml"
-    }
-    }
-  }
+            }
+        }
+     }
 }
