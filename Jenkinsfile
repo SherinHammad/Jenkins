@@ -27,6 +27,15 @@ pipeline {
         sleep time: 120, unit: 'SECONDS'
       }
     }
+    stage('Extract & Write Private Key') {
+      steps {
+        script {
+         def privateKey = sh(script: "terraform output -raw private_key_pem", returnStdout: true).trim()
+         writeFile file: 'my-key.pem', text: privateKey
+         sh 'chmod 600 my-key.pem'
+            }
+         }
+   }
 
     stage('Get EC2 Public IP') {
       steps {
