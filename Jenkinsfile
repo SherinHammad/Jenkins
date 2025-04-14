@@ -32,8 +32,10 @@ pipeline {
       steps {
         script {
           def privateKey = sh(script: "terraform output -raw private_key_pem", returnStdout: true).trim()
-          writeFile file: "${env.WORKSPACE}/my-key.pem", text: privateKey
-          sh "chmod 600 ${env.WORKSPACE}/my-key.pem"
+          def keyPath = "/tmp/my-key.pem"
+          writeFile file: keyPath, text: privateKey
+          sh "chmod 600 ${keyPath}"
+          env.KEY_PATH = keyPath
         }
       }
     }
@@ -42,14 +44,16 @@ pipeline {
       steps {
         script {
           def ip = sh(script: "terraform output -raw public_ip", returnStdout: true).trim()
-          writeFile file: "${env.WORKSPACE}/inventory.ini", text: "[ec2]\n${ip} ansible_user=ubuntu ansible_ssh_private_key_file=${env.WORKSPACE}/my-key.pem"
+          def inventoryPath = "/tmp/inventory.ini"
+          writeFile file: inventoryPath, text: "[ec2]\n${ip} ansible_user=ubuntu ansible_ssh_private_key_file=${env.KEY_PATH}"
+          env.INVENTORY_PATH = inventoryPath
         }
       }
     }
 
     stage('Run Ansible Playbook') {
       steps {
-        sh 'ansible-playbook -i inventory.ini playbook.yaml'
+        sh "ansible-playbook -i ${env.INVENTORY_PATH} playbook.yaml"
       }
     }
   }
